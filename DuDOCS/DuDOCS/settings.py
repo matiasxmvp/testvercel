@@ -23,10 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-dd*=&@x2hm_7mg$o9)$98io#+m(p#)vbame#t-u7a49z03!*w3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # ALLOWED_HOSTS = ['*'] '*' para permitir todos los hosts, solo usar en entorno de desarrollo
-ALLOWED_HOSTS = ['.vercel.app']
+ALLOWED_HOSTS = ['.vercel.app','now.sh','127.0.0.1','localhost']
 
 # Application definition
 
@@ -100,8 +100,12 @@ WSGI_APPLICATION = 'DuDOCS.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'railway',
+        'USER': 'postgres',
+        'PASSWORD': '42E5CCBC5bb6dCgF*eeGbEd5Ef3Ae-e1',
+        'HOST': 'roundhouse.proxy.rlwy.net',
+        'PORT': '18878',
     }
 }
 
@@ -163,3 +167,6 @@ EMAIL_HOST_PASSWORD = 'jjrz svhh dzcb ozng'  # La contraseña de aplicación de 
 
 # X_FRAME_OPTIONS = 'SAMEORIGIN'
 X_FRAME_OPTIONS='SAMEORIGIN'
+
+STATICFILES_DIRS = os.path.join(BASE_DIR, 'static'),
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
