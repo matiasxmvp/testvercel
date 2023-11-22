@@ -1,0 +1,383 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prestamos Punto Estudiantil</title>
+    {% tailwind_css %}
+</head>
+<body>
+    <!-- tabla y filtro -->
+    <div class="body w-full p-4 flex-1 bg-white">
+        <h1 class="text-2xl mb-4 font-bold">Prestamos</h1>
+        <div class="flex justify-between items-center mb-4">
+            <input type="text" id="busqueda" placeholder="Buscar..." class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+            <button class="notificarAtrasos bg-blue hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded">Notificar atrasados</button>
+        </div>
+        <div class="h-screen w-full">
+            <table class="table-auto text-left border-collapse w-full" style="background-color: #1C1B1F;">
+                <thead>
+                    <tr>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Solicitante</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-2/5 md:w-1/6" style="background-color: #1C1B1F;">Producto</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Cantidad</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Fecha Solicitud</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Fecha Límite</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Estado</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestamo in prestamos %}
+                    <tr class="text-left object-left {% if forloop.counter|divisibleby:2 %}bg-gray-100{% else %}bg-white{% endif %}" data-id="{{ prestamo.id }}">
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">
+                                {{ prestamo.nombre }}<br>
+                                {{ prestamo.rut }}<br>
+                                {{ prestamo.email }}
+                            </td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ prestamo.producto.nombre }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ prestamo.cantidad }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ prestamo.fecha_prestamo|date:"d-m-Y" }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ prestamo.fecha_limite|date:"d-m-Y" }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ prestamo.estado }}</td> 
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle relative group">
+                                <button class="bg-blue -dark text-black font-bold py-2 px-4 rounded">
+                                    Opciones
+                                </button>
+                                <!-- Menú desplegable -->
+                                <ul class="absolute hidden space-y-1 bg-white border border-gray-300 py-1 px-2 rounded-md shadow-md text-sm z-10 group-hover:block">
+                                    <li>
+                                        <button class="rounded-lg entregar-button block px-4 py-2  hover:bg-yellow-500">Entregar</button>
+                                    </li>
+                                        {% if prestamo.estado == "Atrasado" %}
+                                        <li>
+                                            <button class="rounded-lg email-button block px-4 py-2  hover:bg-yellow-500">Enviar Email</button>
+                                        </li>
+                                        {% endif %}
+                                    <li>
+                                        <button class="rounded-lg edit-button block px-4 py-2  hover:bg-yellow-500">Editar</button>
+                                    </li>
+                                    <li>
+                                        <button class="rounded-lg delete-button block px-4 py-2 hover:bg-red hover:bg-yellow-500">Eliminar</button>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+<!-- Modal para editar prestamo -->
+<div id="editModal" class="fixed top-0 left-0 w-full h-full bg-opacity-50 flex items-center justify-center hidden" style="backdrop-filter: blur(6px);">
+    <div class="bg-white p-8 space-y-4 w-1/2 h-auto mx-auto my-20">
+        <h1 class="text-2xl mb-4 text-center">Editar Prestamo</h1>
+        <!-- Formulario de edición de prestamo -->
+        <form action="" id="editForm" method="POST" class="grid grid-cols-1 gap-4">
+            {% csrf_token %}
+            <!-- Campos del formulario -->
+            <!-- Campo para ingresar un nombre -->
+            <div>
+                <label for="editnombre" class="block text-sm font-medium text-gray-700">Nombre:</label>
+                <input type="text" name="editnombre" id="editnombre" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm" required minlength="4" maxlength="30"></input>
+            </div>
+            
+            <div>
+                <label for="editrut" class="block text-sm font-medium text-gray-700">Rut:</label>
+                <input type="input" name="editrut" id="editrut" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="editemail" class="block text-sm font-medium text-gray-700">Email:</label>
+                <input type="email" id="editemail" name="editemail" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="editproducto" class="block text-sm font-medium text-gray-700">Producto:</label>
+                <input type="text" name="editproducto" id="editproducto" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm" readonly>
+            </div>
+            <div>
+                <label for="editcantidad" class="block text-sm font-medium text-gray-700">Cantidad:</label>
+                <input type="number" id="editcantidad" name="editcantidad" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+            </div>
+
+            <div>
+                <label for="editfechalimite" class="block text-sm font-medium text-gray-700">Fecha Límite:</label>
+                <input type="date" id="editfechalimite" name="editfechalimite" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+            </div>
+
+            <!-- Botones de envío y cierre -->
+            <div class="col-span-full flex justify-between items-center mb-4">
+                <input type="submit" id="saveButton" class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded" value="Guardar cambios">
+                <!-- Botón para cerrar el modal -->
+                <button id="closeEditModal" type="button" class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">Cerrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    
+</body>
+
+<!-- jquery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Script editar prestamo -->
+<script>
+    $(document).ready(function () {
+        $(".edit-button").on("click", function () {
+            var row = $(this).closest("tr");
+            var id = row.data("id");  // Obtener el ID del prestamo
+
+            // Realizar una petición AJAX para obtener los datos del prestamo
+            $.ajax({
+                url: "/obtener_prestamo/" + id + "/",  // Reemplazar con la URL correcta
+                type: "GET",
+                success: function (data) {
+                    // Rellenar el formulario con los datos actuales del prestamo
+                    var fechaLimite = new Date(data.fecha_limite);
+                    var fechaLimiteFormatted = fechaLimite.toISOString().split('T')[0];
+                    $("#editemail").val(data.email);
+                    $("#editrut").val(data.rut);
+                    $("#editnombre").val(data.nombre);
+                    $("#editproducto").val(data.producto);
+                    $("#editcantidad").val(data.cantidad);
+                    $("#editfechalimite").val(fechaLimiteFormatted);
+
+                    // Mostrar el modal
+                    $("#editModal").removeClass("hidden");
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+
+            // Cerrar el modal
+            $("#closeEditModal").on("click", function () {
+                $("#editModal").addClass("hidden");
+                $("#editForm")[0].reset();  // Vaciar los campos del formulario
+                $("#saveButton, #closeEditModal").prop("disabled", false);  // Habilitar los botones
+            });
+
+            // Enviar el formulario
+            $("#editForm").on("submit", function (event) {
+                event.preventDefault();
+                var formData = new FormData(this);
+                formData.append('prestamo_id', id);
+
+                // Desactivar los botones
+                $("#saveButton, #closeEditModal").prop("disabled", true);
+
+                $.ajax({
+                    url: "/editar_prestamo/" + id + "/",  // Reemplazar con la URL correcta
+                    type: 'POST',
+                    data: formData,
+                    success: function (data) {
+                        if (data.success) {
+                            alert(data.message);
+                            $("#editModal").addClass("hidden");
+                            $("#editForm")[0].reset();
+                            $("#saveButton, #closeEditModal").prop("disabled", false);
+                            window.parent.postMessage('reloadIframes', '*');
+                        } else if (data.error) {
+                            alert(data.error);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        if (jqXHR.responseJSON.error) {
+                            alert(jqXHR.responseJSON.error);
+                        }
+                        console.log(errorThrown);
+                        $("#saveButton, #closeEditModal").prop("disabled", false);
+                    },
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+
+                // Evitar que se envíe el formulario más de una vez
+                event.stopImmediatePropagation();
+                return false;
+            });
+        });
+    });
+</script>
+
+
+<!-- Script eliminar prestamo -->
+<script>
+    $(document).ready(function(){
+    $(".delete-button").on("click", function(){
+        var row = $(this).closest("tr");
+        var id = row.data("id");  // Obtener el ID del documento
+
+        // Confirmar la eliminación
+        if (!confirm("¿Estás seguro de que quieres eliminar este prestamo?")) {
+            return;
+        }
+
+        $.ajax({
+            url: "/eliminar_prestamo/" + id + "/",  // Generar la URL dinámicamente
+            type: 'POST',
+            data: {'prestamo_id': id,'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()},
+            success: function (data) {
+                alert('Prestamo eliminado con éxito');
+                
+                // Enviar mensaje a la ventana principal.
+                window.parent.postMessage('reloadIframes', '*');    
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error al eliminar el prestamo: ' + errorThrown);
+            }
+        });
+        // Evitar que se envíe el formulario más de una vez
+        e.stopImmediatePropagation();
+        return false;
+    });
+});
+
+</script>
+
+<!-- Script entregar prestamo -->
+<script>
+    $(document).ready(function(){
+    $(".entregar-button").on("click", function(){
+        var row = $(this).closest("tr");
+        var id = row.data("id");  // Obtener el ID del prestamo
+
+        // Confirmar la eliminación
+        if (!confirm("¿Estás seguro de que quieres entregar el prestamo? recuerda revisar lo devuelto")) {
+            return;
+        }
+
+        $.ajax({
+            url: "/entregar_prestamo/" + id + "/",  // Generar la URL dinámicamente
+            type: 'POST',
+            data: {'prestamo_id': id,'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()},
+            success: function (data) {
+                alert('Prestamo entregado con éxito');
+                
+                // Enviar mensaje a la ventana principal.
+                window.parent.postMessage('reloadIframes', '*');    
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error al entregar prestamo: ' + errorThrown);
+            }
+        });
+        // Evitar que se envíe el formulario más de una vez
+        e.stopImmediatePropagation();
+        return false;
+    });
+});
+
+</script>
+
+<!-- script notificar atraso -->
+<script>
+    $(document).ready(function(){
+    $(".email-button").on("click", function(){
+        var row = $(this).closest("tr");
+        var id = row.data("id");  // Obtener el ID del documento
+
+        // Confirmar la eliminación
+        if (!confirm("¿Estás seguro de que quieres enviar una notificación?")) {
+            return;
+        }
+
+        $.ajax({
+            url: "/notificar_prestamo/" + id + "/",  // Generar la URL dinámicamente
+            type: 'POST',
+            data: {'prestamo_id': id,'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()},
+            success: function (data) {
+                alert('Notificación enviada con éxito');
+                
+                // Enviar mensaje a la ventana principal.
+                window.parent.postMessage('reloadIframes', '*');    
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error al enviar notificación: ' + errorThrown);
+            }
+        });
+        // Evitar que se envíe el formulario más de una vez
+        e.stopImmediatePropagation();
+        return false;
+    });
+});
+</script>
+
+<!-- script notificar todos los atrasos  -->
+<script>
+    $(document).ready(function(){
+    $(".notificarAtrasos").on("click", function(){
+        var row = $(this).closest("tr");
+        var id = row.data("id");  // Obtener el ID del documento
+
+        // Confirmar la eliminación
+        if (!confirm("¿Estás seguro de que quieres enviar una notificación a todos los emails con prestamos atrasados?")) {
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'notificar_prestamos' %}",  // Generar la URL dinámicamente
+            type: 'POST',
+            data: {'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()},
+            success: function (data) {
+                alert(data.message);
+                
+                // Enviar mensaje a la ventana principal.
+                window.parent.postMessage('reloadIframes', '*');    
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error al enviar notificaciones: ' + errorThrown);
+            }
+        });
+        // Evitar que se envíe el formulario más de una vez
+        e.stopImmediatePropagation();
+        return false;
+    });
+});
+</script>
+
+<!-- filtro -->
+<script>
+    $(document).ready(function(){
+        $("#busqueda").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("table tbody tr").filter(function() {
+                var solicitante = $(this).find("td:nth-child(1)").text().toLowerCase();
+                var producto = $(this).find("td:nth-child(2)").text().toLowerCase();
+                var fechaSolicitud = $(this).find("td:nth-child(4)").text().toLowerCase();
+                var fechaLimite = $(this).find("td:nth-child(5)").text().toLowerCase();
+                var estado = $(this).find("td:nth-child(6)").text().toLowerCase();
+                $(this).toggle(
+                    solicitante.indexOf(value) > -1 ||
+                    producto.indexOf(value) > -1 ||
+                    fechaSolicitud.indexOf(value) > -1 ||
+                    fechaLimite.indexOf(value) > -1 ||
+                    estado.indexOf(value) > -1
+                )
+            });
+        });
+    });
+</script>
+
+<!-- completar rut -->
+<script>
+    document.getElementById('editrut').addEventListener('input', (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    let length = value.length;
+
+    if (length > 2) {
+        if (length === 8) {
+            value = value.replace(/(\d{1})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3-$4");
+        } else if (length === 9) {
+            value = value.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3-$4");
+        }
+    }
+
+    e.target.value = value;
+    });
+</script>
+
+
+</html>

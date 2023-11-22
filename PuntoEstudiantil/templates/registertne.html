@@ -1,0 +1,294 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar TNE</title>
+
+    {% tailwind_css %}
+</head>
+<body>
+<div class="container mx-auto mt-8">
+    <h2 class="text-2xl font-bold mb-4">Registro TNE</h2>
+    <form method="POST" id="main-form" autocomplete="off">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        
+        <div id="form-container">
+            {% for form in formset %}
+            <div class="mb-4 flex flex-wrap form-instance" id="form-{{ forloop.counter0 }}">
+                <div class="mr-4">
+                    <label for="{{ form.rut.id_for_label }}" class="block text-sm font-medium text-gray-700  placeholder:11111111-1" >Rut:</label>
+                    {{ form.rut }}
+                </div>
+                <div class="mr-4">
+                    <label for="{{ form.nombre.id_for_label }}" class="block text-sm font-medium text-gray-700">Nombre:</label>
+                    {{ form.nombre }}
+                </div>
+                <div class="mr-4">
+                    <label for="{{ form.apellido.id_for_label }}" class="block text-sm font-medium text-gray-700">Apellido:</label>
+                    {{ form.apellido }}
+                </div>
+                <div class="mr-4">
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">Email:</label>
+                    {{ form.email }}
+                </div>
+                
+                <div class="mr-4">
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">Condicion:</label>
+                    {{ form.condicion }}
+                    
+                </div>
+                <div class="mt-5">
+                    <button type="button" onclick="deleteForm(this)" class="bg-[#1C1B1F] text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors ">Eliminar</button>
+                </div>
+                
+
+            </div>
+            {% endfor %}
+            
+        </div>
+        <div class="mt-8">
+            <button type="button" onclick="cloneForm()" class="bg-[#1C1B1F] text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors">Registrar más TNEs</button>
+            <button type="submit" class="bg-[#1C1B1F] text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors ml-14">Registrar Todas</button>
+        </div>
+        
+    </form>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[id^="id_form-"][id$="-rut"]').forEach(rutInput => {
+                rutInput.addEventListener('blur', (event) => {
+                    const rutValue = formatRut(event.target.value); 
+                    event.target.value = rutValue;
+                    checkRutExists(rutValue, event.target);
+                });
+            });
+        });
+
+        function checkRutExists(rut, inputElement) {
+            fetch(`/verificar-rut-existente/?rut=${rut}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        alert(`El rut ${rut} ya tiene una TNE asociada`);
+                        clearForm(inputElement.closest('.form-instance'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al verificar el RUT:', error);
+                });
+        }
+
+        function clearForm(formElement) {
+            
+            formElement.querySelectorAll('input, select').forEach(input => {
+                // Verifica si el campo es un checkbox o radio button
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    input.checked = false; // Desmarca los checkbox y radio buttons
+                } else {
+                    input.value = ''; // Limpia los campos de texto y selects
+                }
+            });
+        }
+</script>
+        {% if tnes_saved %}
+        <script>
+            alert("TNEs guardadas correctamente");
+            window.location.href = "{% url 'registertne' %}";
+        </script>
+        {% endif %}
+
+        <script>
+            function deleteForm(button) {
+                const formContainer = document.getElementById('form-container');
+                const formInstances = formContainer.getElementsByClassName('form-instance');
+        
+                // Si hay más de un formulario, permite la eliminación
+                if (formInstances.length > 1) {
+                    if (confirm('¿Estás seguro de que deseas eliminar este formulario?')) {
+                        const formInstance = button.closest('.form-instance');
+                        formInstance.remove();
+        
+                        // Actualizar el TOTAL_FORMS
+                        const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+                        totalForms.value = parseInt(totalForms.value) - 1;
+                    }
+                } else {
+                    // Si es el único formulario, limpiar los campos
+                    if (confirm('Se limpiarán los campos. ¿Estás seguro?')) {
+                        const inputs = formInstances[0].querySelectorAll('input, select, textarea');
+                        inputs.forEach(input => {
+                            switch(input.type) {
+                                case 'checkbox':
+                                case 'radio':
+                                    input.checked = false;
+                                    break;
+                                default:
+                                    input.value = '';
+                                    break;
+                            }
+                        });
+                    }
+                }
+        
+                // Recorrer los formularios restantes y actualizar sus índices (si es necesario)
+                Array.from(formInstances).forEach((form, index) => {
+                    const inputs = form.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        input.name = input.name.replace(/form-\d+-/, `form-${index}-`);
+                        input.id = input.id.replace(/form-\d+-/, `form-${index}-`);
+                    });
+                    form.id = `form-${index}`;
+                });
+                updateSubmitButtonText();
+            }
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+            // Llama a la función updateSubmitButtonText al cargar la página
+                updateSubmitButtonText();
+
+            
+            document.querySelector("[onclick='cloneForm()']").addEventListener('click', () => {
+                
+                updateSubmitButtonText();
+            });
+
+        });
+
+        // Esta función actualiza el texto del botón de enviar según la cantidad de formularios
+        function updateSubmitButtonText() {
+            const formCount = document.querySelectorAll('#form-container .form-instance').length;
+            const submitButton = document.querySelector('#main-form button[type="submit"]');
+            
+            if (submitButton) {
+                submitButton.textContent = formCount > 1 ? 'Registrar Todas' : 'Registrar';
+            }
+        }
+        </script>
+        
+        
+    <script>
+        function cloneForm() {
+            const formContainer = document.getElementById('form-container');
+            const formInstance = formContainer.querySelector('.form-instance').cloneNode(true);
+
+            const formIndex = formContainer.children.length;
+
+            // Actualizar nombres y ids de los campos
+            const inputs = formInstance.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.name = input.name.replace(/form-\d+-/, `form-${formIndex}-`);
+                input.id = input.id.replace(/form-\d+-/, `form-${formIndex}-`);
+                if (input.type !== "checkbox") {
+                    input.value = '';
+                } else {
+                    input.checked = false;
+                }
+            });
+
+            formContainer.appendChild(formInstance);
+
+            // Actualizar el TOTAL_FORMS
+            const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+            totalForms.value = parseInt(totalForms.value) + 1;
+        }
+        
+    </script>
+        
+
+
+        <script>
+            function fillFormFields(inputRut) {
+                let rutValue = inputRut.value;
+                rutValue = formatRut(rutValue);
+                if (rutValue) {
+                    fetch(`/obtenerusuarioRut/?rut=${rutValue}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                inputRut.value = '';
+                                throw new Error('Usuario no encontrado');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const formInstance = inputRut.closest('.form-instance');
+                            formInstance.querySelector('[name$="nombre"]').value = data.nombre || '';
+                            formInstance.querySelector('[name$="apellido"]').value = data.apellido || '';
+                            formInstance.querySelector('[name$="email"]').value = data.username || ''; 
+                            formInstance.querySelector('[name$="condicion"]').value = data.condicion || '';
+                            // Verificar que todos los campos necesarios están llenos
+                            checkFormFields(formInstance);
+                        })
+                        .catch(error => {
+                            console.error('Hubo un error al obtener la información del usuario:', error);
+                            alert(error.message);
+                        });
+                }
+            }
+
+            function checkFormFields(formInstance) {
+                // Selecciona todos los campos requeridos dentro de la instancia del formulario
+                const requiredFields = formInstance.querySelectorAll('[required]');
+                const allFieldsFilled = Array.from(requiredFields).every(input => input.value.trim() !== '');
+                const submitButton = document.querySelector('#main-form button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = !allFieldsFilled;
+                }
+                if (!allFieldsFilled) {
+                    alert('Por favor, rellene todos los campos requeridos antes de guardar.');
+                }
+            }
+
+            document.getElementById('form-container').addEventListener('blur', (event) => {
+                if (event.target && event.target.name.endsWith('rut')) {
+                    fillFormFields(event.target);
+                }
+            }, true);
+
+            
+            document.querySelector('#main-form button[type="submit"]').addEventListener('click', (event) => {
+                const formInstances = document.querySelectorAll('.form-instance');
+                let allValid = true;
+                formInstances.forEach(formInstance => {
+                    checkFormFields(formInstance);
+                    const requiredFields = formInstance.querySelectorAll('[required]');
+                    if (Array.from(requiredFields).some(input => input.value.trim() === '')) {
+                        allValid = false;
+                    }
+                });
+                if (!allValid) {
+                    event.preventDefault(); // Previene que el formulario se envíe
+                    alert('No se puede enviar el formulario. Algunos campos están vacíos.');
+                }
+            });
+
+
+            function formatRut(rut) {
+                let cleanRut = rut.replace(/\./g, '').replace(/-/g, '');
+                if (cleanRut.length > 1) {
+                    cleanRut = cleanRut.slice(0, -1) + '-' + cleanRut.slice(-1);
+                }
+                return cleanRut;
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                // Seleccionar todos los campos de RUT dentro del contenedor del formset
+                document.querySelectorAll('[id^="id_form-"][id$="-rut"]').forEach(rutInput => {
+                    rutInput.addEventListener('blur', (event) => {
+                        event.target.value = formatRut(event.target.value);
+                    });
+                });
+            });
+        </script>
+
+
+</body>
+
+</html> 

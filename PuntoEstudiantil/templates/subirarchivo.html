@@ -1,0 +1,64 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar TNE</title>
+
+    {% tailwind_css %}
+</head>
+<body>
+    <form id="submit-form" method="POST" enctype="multipart/form-data" action="{% url 'subirarchivo' %}">
+        {% csrf_token %}
+        <div id="documentos">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="col-span-2">
+                    <label for="archivo" class="block text-gray-700">Seleccione un archivo:</label>
+                    <input type="file" accept=".xls, .xlsx, .XLS, .XLSX" name="archivo" class="w-full py-2 px-3 border rounded focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500" required>
+                </div>
+            </div>
+        </div>
+        <!-- Botón de envío -->
+        <input type="submit" value="Subir Archivo" class="bg-[#1C1B1F] text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors">
+    </form>
+    <div id="loading" style="display: none;">
+        <p>Cargando, por favor espere...</p>
+    </div>
+    <script>
+        const form = document.getElementById('submit-form');
+        const loading = document.getElementById('loading');
+    
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            // Mostrar el indicador de carga
+            loading.style.display = 'block';
+    
+            const formData = new FormData(form);
+            
+            fetch("{% url 'subirarchivo' %}", {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ocultar el indicador de carga
+                loading.style.display = 'none';
+    
+                if(data.success) {
+                    alert('Archivo subido con éxito!');
+                } else {
+                    alert('Error al subir el archivo: ' + data.error);
+                }
+            })
+            .catch(error => {
+                // Ocultar el indicador de carga
+                loading.style.display = 'none';
+                alert('Error al subir el archivo: ' + error);
+            });
+        });
+    </script>
+    
+</body>
+</html>

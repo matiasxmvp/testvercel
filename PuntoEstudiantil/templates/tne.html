@@ -1,0 +1,77 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Punto Estudiantiles</title>
+    {% tailwind_css %}
+</head>
+
+    <body class="bg-gray-200 p-4">
+        <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Acciones de TNE</h2>
+            
+            <div class="space-y-4">
+                <li  class="text-white bg-black   hover:bg-yellow-500 ml-2 py-2 px-4 rounded-full inline-block transition duration-300" style="background-color: #1C1B1F;" onclick="showContent('registertne')">
+                    <span>Registrar TNE</span>
+                </li>
+                <li  class="text-white bg-black   hover:bg-yellow-500 ml-2 py-2 px-4 rounded-full inline-block transition duration-300" style="background-color: #1C1B1F;" onclick="showContent('vertne')">
+                    <span>Ver TNE's</span>
+                </li>
+                <li  class="text-white bg-black   hover:bg-yellow-500 ml-2 py-2 px-4 rounded-full inline-block transition duration-300" style="background-color: #1C1B1F;" onclick="showContent('verificartne')">
+                    <span>Verificar TNE</span>
+                </li>
+                
+            </div>
+            
+        </div>
+        <div id="registertne" class="content hidden">
+            <iframe class="w-full h-full" src="{% url 'registertne' %}" style="width: 100%; height: calc(100vh - 2rem);"></iframe>
+        </div>
+
+        <div id="vertne" class="content hidden">
+            <iframe class="w-full h-full" src="{% url 'vertne' %}" style="width: 100%; height: calc(100vh - 2rem);"></iframe>
+        </div>
+
+        <div id="verificartne" class="content hidden">
+            <iframe class="w-full h-full" src="{% url 'verificartne' %}" style="width: 100%; height: calc(100vh - 2rem);"></iframe>
+        </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>  
+
+
+    <script>
+        function showContent(id) {
+            // Oculta todos los contenidos
+            document.querySelectorAll('.content').forEach(el => el.classList.add('hidden'));
+            
+            // Muestra el contenido seleccionado
+            const selectedContent = document.querySelector(`#${id}`);
+            selectedContent.classList.remove('hidden');
+    
+            // Recarga el iframe si es parte del contenido seleccionado
+            const iframe = selectedContent.querySelector('iframe');
+            if (iframe) {
+                iframe.contentWindow.location.reload();
+            }
+    
+            // Resalta el elemento seleccionado en el menú
+            document.querySelectorAll('nav li').forEach(el => el.classList.remove('bg-yellow-500'));
+            document.querySelector(`[onclick="showContent('${id}')"]`).classList.add('bg-yellow-500');
+        }
+    
+        // No seleccionar ninguna pestaña al cargar la página
+        window.onload = function() {
+            document.querySelectorAll('nav li').forEach(el => el.classList.remove('bg-yellow-500'));
+            document.querySelectorAll('.content').forEach(el => {
+                if (el.id !== 'default-content') {
+                    el.classList.add('hidden');
+                }
+            });
+        };
+    </script>
+    
+    </body>
+
+
+</html>  

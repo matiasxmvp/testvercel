@@ -1,0 +1,485 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Punto Estudiantil</title>
+    {% tailwind_css %}
+</head>
+<body>
+    <!-- tabla y filtro -->
+    <div class="body w-full p-4 flex-1 bg-white">
+        <h1 class="text-2xl mb-4 font-bold">Inventario</h1>
+        <div class="flex justify-between items-center mb-4">
+            <input type="text" id="busqueda" placeholder="Buscar..." class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+            <button class="btnAgregarProducto bg-blue hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded">Agregar Producto</button>
+        </div>
+        <div class="h-screen w-full">
+            <table class="table-auto text-left border-collapse w-full" style="background-color: #1C1B1F;">
+                <thead>
+                    <tr>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Imagen</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-2/5 md:w-1/6" style="background-color: #1C1B1F;">Nombre</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Descripción</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Stock Total</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Stock Disponible</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr class="{% if forloop.counter|divisibleby:2 %}bg-gray-100{% else %}bg-white{% endif %}" data-id="{{ producto.id }}">
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle w-20 h-30 max-h-30 max-w-20"><img class="w-20 h-30 max-h-30 max-w-20" src="{{ producto.imagen.url }}" alt="Imagen del producto {{ producto.nombre }}"></td>
+                            <td class="producto-nombre py-4 px-6 border-b border-gray-400 align-middle">{{ producto.nombre }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ producto.descripcion }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ producto.cantidad_total }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ producto.cantidad_disponible }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle relative group">
+                                <button class="bg-blue -dark text-black font-bold py-2 px-4 rounded">
+                                    Opciones
+                                </button>
+                                <!-- Menú desplegable -->
+                                <ul class="absolute hidden space-y-1 bg-white border border-gray-300 py-1 px-2 rounded-md shadow-md text-sm z-10 group-hover:block">
+                                    {% if producto.cantidad_disponible > 0 %}
+                                        <li>
+                                            <button class="rounded-lg prestamo-button block px-4 py-2  hover:bg-yellow-500">Prestamo</button>
+                                        </li>
+                                    {% endif %}
+                                    <li>
+                                        <button class="rounded-lg edit-button block px-4 py-2  hover:bg-yellow-500">Editar</button>
+                                    </li>
+                                    <li>
+                                        <button class="rounded-lg delete-button block px-4 py-2 hover:bg-red hover:bg-yellow-500">Eliminar</button>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Modal para editar producto -->
+    <div id="editModal" class="fixed top-0 left-0   w-full h-full bg-opacity-50 flex items-center justify-center hidden" style="width: 100%; height: 100%; backdrop-filter: blur(6px);">
+        <div class="bg-white p-8 rounded-lg w-3/4">
+            <h1 class="text-2xl mb-4">Editar Producto</h1>
+            <!-- Formulario de edición -->
+            <form id="editForm" action="" method="">
+                {% csrf_token %}
+                <!-- Campos del formulario -->
+                <label for="editImagen" class="block text-sm font-medium text-gray-700">Imagen:</label>
+                <div class="flex">
+                    <input type="file" id="editImagen" name="editImagen" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                    <img id="editImagenPreview" src="" alt="Imagen del producto" class="w-20 h-30 max-h-30 max-w-20 ml-4">
+                </div>
+                
+
+                <label for="editNombre" class="block text-sm font-medium text-gray-700">Nombre:</label>
+                <input type="text" id="editNombre" name="editNombre" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+    
+                <label for="editDescripcion" class="block text-sm font-medium text-gray-700">Descripción:</label>
+                <textarea id="editDescripcion" name="editDescripcion" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"></textarea>
+                
+                <label for="editCantidadTotal" class="block text-sm font-medium text-gray-700">Cantidad Total:</label>
+                <input type="number" id="editCantidadTotal" name="editCantidadTotal" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"></input>
+
+                <label for="editCantidadDisponible" class="block text-sm font-medium text-gray-700">Cantidad Disponible:</label>
+                <input type="number" id="editCantidadDisponible" name="editCantidadDisponible" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"></input>
+
+                <div class="flex justify-between">
+                    <input type="submit" value="Guardar cambios" id="saveButton" class="bg-black hover:bg-gray-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    <button id="closeEditModal" type="button" class="bg-black hover:bg-gray-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para agregar producto -->
+    <div id="modalAgregarProducto" class="fixed top-0 left-0 w-full h-full bg-opacity-50 flex items-center justify-center hidden" style="backdrop-filter: blur(6px);">
+        <div class="bg-white p-8 space-y-4 w-1/2 h-auto mx-auto my-20">
+            <h1 class="text-2xl mb-4 text-center">Agregar Producto</h1>
+            <!-- Formulario agregar producto -->
+            <form enctype="multipart/form-data" action="{% url 'crear_producto' %}" id="AgregarProducto" method="POST" class="grid grid-cols-1 gap-4">
+                {% csrf_token %}
+                <!-- Campos del formulario -->
+                <div>
+                    <label for="imagenprod" class="block text-sm font-medium text-gray-700">Imagen:</label>
+                    <div class="flex">
+                        <input type="file" name="imagenprod" id="imagenprod" accept=".jpg, .jpeg, .png" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                        <img id="ImagenPreview" src="/media/productos/noimage.jpg" alt="Imagen del producto" class="w-20 h-30 max-h-30 max-w-20 ml-4">
+                    </div>
+
+                    <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+        
+                    <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción:</label>
+                    <textarea id="descripcion" name="descripcion"  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"></textarea>
+                    
+                    <label for="cantidad_total" class="block text-sm font-medium text-gray-700">Cantidad Total:</label>
+                    <input type="number" id="cantidad_total" name="cantidad_total" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"></input>
+
+                    <label for="cantidad_disponible" class="block text-sm font-medium text-gray-700">Cantidad Disponible:</label>
+                    <input type="number" id="cantidad_disponible" name="cantidad_disponible" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"></input>
+                </div>
+    
+                <!-- Botones de envío y cierre -->
+                <div class="col-span-full flex justify-between items-center mb-4">
+                    <button type="submit" class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">Agregar producto</button>
+                    <!-- Botón para cerrar el modal -->
+                    <button id="btnCerrarAgregarProducto" type="button" class="btnCerrarAgregarUsuario bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para crear prestamo -->
+    <div id="modalCrearPrestamo" class="fixed top-0 left-0 w-full h-full bg-opacity-50 flex items-center justify-center hidden" style="backdrop-filter: blur(6px);">
+        <div class="bg-white p-8 space-y-4 w-1/2 h-auto mx-auto my-20">
+            <h1 class="text-2xl mb-4 text-center">Crear prestamo</h1>
+            <!-- Formulario agregar producto -->
+            <form action="{% url 'crear_prestamo' %}" id="CrearPrestamo" method="POST" class="grid grid-cols-1 gap-4">
+                {% csrf_token %}
+                <!-- Campos del formulario -->
+                <div>
+                    <label for="producto" class="block text-sm font-medium text-gray-700">Producto:</label>
+                    <input type="text" name="producto" id="producto" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm" readonly>
+                </div>
+    
+                <!-- Campo para ingresar la cantidad -->
+                <div>
+                    <label for="cantidad" class="block text-sm font-medium text-gray-700">Cantidad:</label>
+                    <input type="number" name="cantidad" id="cantidad" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm" min="1" minlength="1" required>
+                </div>
+                
+                <!-- Campo para ingresar un nombre -->
+                <div>
+                    <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre:</label>
+                    <input type="text" name="nombre" id="nombre" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm" required minlength="4" maxlength="30"></input>
+                </div>
+                
+                <!-- Campo para ingresar rut -->
+                <div>
+                    <label for="rut" class="block text-sm font-medium text-gray-700">Rut:</label>
+                    <input type="input" name="rut" id="rut" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm" minlength="11" maxlength="12" required>
+                </div>
+
+                <!-- Campo para ingresar el email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email:</label>
+                    <input type="email" name="email" id="email" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm" required>
+                </div>
+    
+                <!-- Campo para ingresar la fecha límite (datepicker) -->
+                <div>
+                    <label for="fecha_limite" class="block text-sm font-medium text-gray-700">Fecha Límite:</label>
+                    <input type="date" name="fecha_limite" id="fecha_limite" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm" required>
+                </div>
+                <!-- Botones de envío y cierre -->
+                <div class="col-span-full flex justify-between items-center mb-4">
+                    <button type="submit" class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">Crear prestamo</button>
+                    <!-- Botón para cerrar el modal -->
+                    <button id="closePrestamoModal" type="button" class="btnCerrarAgregarUsuario bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+</body>
+
+<!-- jquery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Script editar producto -->
+<script>
+    $(document).ready(function(){
+        $("#editImagen").on("change", function() {
+        var fileInput = $(this)[0];
+        var file = fileInput.files[0];
+        if (file) {
+            // Mostrar la imagen seleccionada en el campo editImagenPreview
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $("#editImagenPreview").attr("src", e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+        });
+    
+        $(".edit-button").on("click", function(){
+            var row = $(this).closest("tr");
+            var id = row.data("id");  // Obtener el ID del documento
+
+            // Realiza una petición AJAX para obtener los datos del documento
+            $.ajax({
+                url: "/obtener_producto/" + id + "/",
+                type: "GET",
+                success: function (data) {
+                    // Rellenar el formulario con los datos actuales del documento
+                    $("#editImagenPreview").attr("src", data.imagen);
+                    $("#editNombre").val(data.nombre);
+                    $("#editDescripcion").val(data.descripcion);
+                    $("#editCantidadTotal").val(data.cantidad_total);
+                    $("#editCantidadDisponible").val(data.cantidad_disponible);
+
+                    // Mostrar el modal
+                    $("#editModal").removeClass("hidden");
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+
+            // Cerrar el modal
+            $("#closeEditModal").on("click", function() {
+                $("#editModal").addClass("hidden");
+                $("#editForm")[0].reset();  // Vaciar los campos del formulario
+                $("#saveButton, #closeEditModal").prop("disabled", false);  // Habilitar los botones
+            });
+
+            // Enviar el formulario
+            $("#editForm").on("submit", function(event){
+                event.preventDefault();
+                var formData = new FormData(this);
+                formData.append('producto_id', id);
+
+                // Desactivar los botones
+                $("#saveButton, #closeEditModal").prop("disabled", true);
+
+                $.ajax({
+                    url: "/editar_producto/" + id + "/",  // Generar la URL dinámicamente
+                    type: 'POST',
+                    data: formData,
+                    success: function (data) {
+                        if(data.success){
+                        alert(data.message);
+                        $("#editModal").addClass("hidden");
+                        $("#editForm")[0].reset();
+                        $("#saveButton, #closeEditModal").prop("disabled", false);
+                        window.parent.postMessage('reloadIframes', '*');
+                    }
+                    else if (data.error) {
+                        alert(data.error);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if(jqXHR.responseJSON.error){
+                        alert(jqXHR.responseJSON.error);
+                    }
+                    console.log(errorThrown);
+                    $("#saveButton, #closeEditModal").prop("disabled", false);
+                },
+
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+
+                // Evitar que se envíe el formulario más de una vez
+                event.stopImmediatePropagation();
+                return false;
+            });
+        });
+    });
+</script>
+
+<!-- Script eliminar producto -->
+<script>
+    $(document).ready(function(){
+    $(".delete-button").on("click", function(){
+        var row = $(this).closest("tr");
+        var id = row.data("id");  // Obtener el ID del documento
+
+        // Confirmar la eliminación
+        if (!confirm("¿Estás seguro de que quieres eliminar este producto?")) {
+            return;
+        }
+
+        $.ajax({
+            url: "/eliminar_producto/" + id + "/",  // Generar la URL dinámicamente
+            type: 'POST',
+            data: {'producto_id': id,'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()},
+            success: function (data) {
+                alert('Producto eliminado con éxito');
+                
+                // Enviar mensaje a la ventana principal.
+                window.parent.postMessage('reloadIframes', '*');    
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error al eliminar el producto: ' + errorThrown);
+            }
+        });
+        // Evitar que se envíe el formulario más de una vez
+        e.stopImmediatePropagation();
+        return false;
+    });
+});
+
+</script>
+
+<!-- Script para abrir el modal de creación de producto -->
+<script>
+    $(document).ready(function () {
+        $(".btnAgregarProducto").click(function () {
+            $("#modalAgregarProducto").show();
+        });
+
+        $("#btnCerrarAgregarProducto").click(function () {
+            $("#modalAgregarProducto").hide();
+            $("#AgregarProducto")[0].reset();
+        });
+    });
+</script>
+
+<!-- Script para enviar el formulario de creación de producto -->
+<script>
+    $(document).ready(function () {
+        $("#imagenprod").on("change", function() {
+        var fileInput = $(this)[0];
+        var file = fileInput.files[0];
+
+        if (file) {
+            // Mostrar la imagen seleccionada en el campo editImagenPreview
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $("#ImagenPreview").attr("src", e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+        $("#AgregarProducto").submit(function (e) {
+            e.preventDefault();
+    
+            var formData = new FormData(this);
+            formData.append('csrfmiddlewaretoken', $('input[name=csrfmiddlewaretoken]').val());
+
+            $.ajax({
+                url: "{% url 'crear_producto' %}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    if(data.success){
+                        alert(data.success);
+                    }
+                    $("#modalAgregarProducto").hide();
+                    $("#AgregarProducto")[0].reset();
+                    location.reload();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if(jqXHR.responseJSON.error){
+                        alert(jqXHR.responseJSON.error);
+                    }
+                    console.log(errorThrown);
+                }
+            });
+    
+            // Evitar que se envíe el formulario más de una vez
+            e.stopImmediatePropagation();
+            return false;
+        });
+    });    
+</script>
+
+<!-- Script crear prestamo -->
+<script>
+    $(document).ready(function () {
+    $(".prestamo-button").on("click", function(){
+        var row = $(this).closest("tr");
+        var id = row.data("id");  // Obtener el ID del documento
+
+        // Obtener el nombre del producto de la tabla y asignarlo al campo "Producto"
+        var productoNombre = row.find(".producto-nombre").text();
+        $("#producto").val(productoNombre);
+
+        // Mostrar el modal
+        $("#modalCrearPrestamo").removeClass("hidden");
+        
+        // Cerrar el modal
+        $("#closePrestamoModal").on("click", function() {
+            $("#modalCrearPrestamo").addClass("hidden");
+            $("#CrearProducto")[0].reset();  // Vaciar los campos del formulario
+            $("#saveButton, #closePrestamoModal").prop("disabled", false);  // Habilitar los botones
+        });
+
+        // Enviar el formulario
+        $("#CrearPrestamo").on("submit", function(event){
+            event.preventDefault();
+            var formData = new FormData(this);
+            formData.append('producto_id', id);
+
+            // Desactivar los botones
+            $("#saveButton, #closePrestamoModal").prop("disabled", true);
+
+            $.ajax({
+                url: "{% url 'crear_prestamo' %}",
+                type: 'POST',
+                data: formData,
+                success: function (data) {
+                    if(data.success){
+                    alert(data.success);
+                    $("#modalCrearPrestamo").addClass("hidden");
+                    $("#CrearPrestamo")[0].reset();
+                    $("#saveButton, #closePrestamoModal").prop("disabled", false);
+                    window.parent.postMessage('reloadIframes', '*');
+                }
+                else if (data.error) {
+                    alert(data.error);
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if(jqXHR.responseJSON.error){
+                    alert(jqXHR.responseJSON.error);
+                }
+                console.log(errorThrown);
+                $("#saveButton, #closePrestamoModal").prop("disabled", false);
+            },
+
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+
+            // Evitar que se envíe el formulario más de una vez
+            event.stopImmediatePropagation();
+            return false;
+        });
+    });
+});
+
+</script>
+
+<!-- filtro -->
+<script>
+    // jQuery
+    $(document).ready(function(){
+    $("#busqueda").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("table tbody tr").filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+        });
+    });
+</script>
+
+<!-- completar rut -->
+<script>
+    document.getElementById('rut').addEventListener('input', (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    let length = value.length;
+
+    if (length > 2) {
+        if (length === 8) {
+            value = value.replace(/(\d{1})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3-$4");
+        } else if (length === 9) {
+            value = value.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3-$4");
+        }
+    }
+
+    e.target.value = value;
+    });
+</script>
+
+</html>
