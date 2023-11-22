@@ -97,13 +97,23 @@ WSGI_APPLICATION = 'DuDOCS.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'railway',
+        'USER':'root',
+        'PASSWORD':'FhdGDFE33eEe466gag2ah4EaDe24D52F',
+        'HOST':'viaduct.proxy.rlwy.net',
+        'PORT':'59423',
     }
+        
 }
+#DATABASES = {
+   # 'default': {
+     #   'ENGINE': 'django.db.backends.sqlite3',
+    #    'NAME': BASE_DIR / 'db.sqlite3',
+ #   }
+#}
 
 
 # Password validation
