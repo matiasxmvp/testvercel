@@ -1,0 +1,110 @@
+    <!-- tabla y filtro -->
+    <div class="body w-full p-4 flex-1 bg-white">
+        <h1 class="text-2xl mb-4 font-bold">Horarios con problemas</h1>
+        <div class="flex justify-between items-center mb-4">
+            <input type="text" id="buscar" placeholder="Buscar..." class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+        </div>
+        <div class="h-screen w-full">
+            <table class="table-auto text-left border-collapse w-full" style="background-color: #1C1B1F;">
+                <thead>
+                    <tr>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-2/5 md:w-1/6" style="background-color: #1C1B1F;">Fecha</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Horario</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Sala</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Sigla-Sección</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Asignatura</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Tipo</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Comentario</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for horario in horarios %}
+                    <tr class="{% if forloop.counter|divisibleby:2 %}bg-gray-100{% else %}bg-white{% endif %}" data-id="{{ horario.id }}">
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ horario.fecha }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ horario.hora_inicio }} a {{ horario.hora_fin }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ horario.sala }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ horario.sigla_seccion }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ horario.asignatura }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ horario.tipo_hora }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ horario.descripcion }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle relative group">
+                                <button class="bg-blue -dark text-black font-bold py-2 px-4 rounded">
+                                    Opciones
+                                </button>
+                                <!-- Menú desplegable -->
+                                <ul class="absolute hidden space-y-1 bg-white border border-gray-300 py-1 px-2 rounded-md shadow-md text-sm z-10 group-hover:block">
+                                    <li>
+                                        <button class="rounded-lg delete-button block px-4 py-2 hover:bg-red hover:bg-yellow-500">Eliminar</button>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<!-- jquery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Script eliminar horario -->
+<script>
+    $(".delete-button").on("click", function(e){
+        var row = $(this).closest("tr");
+        var id = row.data("id");  // Obtener el ID del horario
+        var csrfToken = "{{ csrf_token|escapejs }}";
+
+        // Confirmar la eliminación
+        if (!confirm("¿Estás seguro de que quieres eliminar este horario?\nAsegurate de haber reasginado este horario antes de eliminarlo.")) {
+            e.stopImmediatePropagation();
+            return;
+        }
+
+        $.ajax({
+            url: "/eliminar_horario_excepcional/" + id + "/",  // Generar la URL dinámicamente
+            type: 'POST',
+            data: {'horario_id': id,'csrfmiddlewaretoken': csrfToken},
+            success: function (data) {
+                alert('Horario eliminado con éxito');
+                
+                // Enviar mensaje a la ventana principal.
+                window.parent.postMessage('horarioexcepcional', '*'); 
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error al eliminar el horario: ' + errorThrown);
+            }
+        });
+        // Evitar que se envíe el formulario más de una vez
+        e.stopImmediatePropagation();
+        return false;
+    });
+// });
+</script>
+
+ <!-- filtro -->
+<script>
+        $("#buscar").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("table tbody tr").filter(function() {
+                var fecha = $(this).find("td:nth-child(1)").text().toLowerCase();
+                var horario = $(this).find("td:nth-child(2)").text().toLowerCase();
+                var sala = $(this).find("td:nth-child(3)").text().toLowerCase();
+                var siglaseccion = $(this).find("td:nth-child(4)").text().toLowerCase();
+                var asignatura = $(this).find("td:nth-child(5)").text().toLowerCase();
+                var tipo = $(this).find("td:nth-child(6)").text().toLowerCase();
+                var comentario = $(this).find("td:nth-child(7)").text().toLowerCase();
+                $(this).toggle(
+                    fecha.indexOf(value) > -1 ||
+                    horario.indexOf(value) > -1 ||
+                    sala.indexOf(value) > -1 ||
+                    siglaseccion.indexOf(value) > -1 ||
+                    asignatura.indexOf(value) > -1 ||
+                    tipo.indexOf(value) > -1 ||
+                    comentario.indexOf(value) > -1
+                )
+            });
+        });
+    // });
+</script>

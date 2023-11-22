@@ -1,0 +1,277 @@
+    <!-- tabla y filtro -->
+    <div class="body w-full p-4 flex-1 bg-white">
+        <h1 class="text-2xl mb-4 font-bold">Salas</h1>
+        <div class="flex justify-between items-center mb-4">
+            <input type="text" id="busquedas" placeholder="Buscar..." class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+            <button class="btnAgregarSala bg-blue hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded">Agregar Sala</button>
+        </div>
+        <div class="h-screen w-full">
+            <table class="table-auto text-left border-collapse w-full" style="background-color: #1C1B1F;">
+                <thead>
+                    <tr>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-2/5 md:w-1/6" style="background-color: #1C1B1F;">Nombre</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Capacidad</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle w-1/5 md:w-1/6" style="background-color: #1C1B1F;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sala in salas %}
+                    <tr class="{% if forloop.counter|divisibleby:2 %}bg-gray-100{% else %}bg-white{% endif %}" data-id="{{ sala.id }}">
+                            <td class="sala-nombre py-4 px-6 border-b border-gray-400 align-middle">{{ sala.nombre }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ sala.capacidad }}</td>
+                            <td class="py-4 px-6 border-b border-gray-400 align-middle relative group">
+                                <button class="bg-blue -dark text-black font-bold py-2 px-4 rounded">
+                                    Opciones
+                                </button>
+                                <!-- Menú desplegable -->
+                                <ul class="absolute hidden space-y-1 bg-white border border-gray-300 py-1 px-2 rounded-md shadow-md text-sm z-10 group-hover:block">
+                                    <li>
+                                        <button class="rounded-lg edit-button block px-4 py-2  hover:bg-yellow-500">Editar</button>
+                                    </li>
+                                    <li>
+                                        <button class="rounded-lg delete-button block px-4 py-2 hover:bg-red hover:bg-yellow-500">Eliminar</button>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Modal para editar sala -->
+    <div id="editModal" class="fixed top-0 left-0   w-full h-full bg-opacity-50 flex items-center justify-center hidden" style="width: 100%; height: 100%; backdrop-filter: blur(6px);">
+        <div class="bg-white p-8 rounded-lg w-3/4">
+            <h1 class="text-2xl mb-4">Editar sala</h1>
+            <!-- Formulario de edición -->
+            <form id="editForm" action="" method="">
+                {% csrf_token %}
+                <!-- Campos del formulario -->
+                <label  class="block text-sm font-medium text-gray-700">Nombre:</label>
+                <input type="text" id="editNombre" name="editNombre" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+    
+                <label  class="block text-sm font-medium text-gray-700">Capacidad:</label>
+                <input type="number" id="editCapacidad" name="editCapacidad" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"></input>
+
+                <div class="flex justify-between">
+                    <input type="submit" value="Guardar cambios" id="saveButton" class="bg-black hover:bg-gray-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    <button id="closeEditModal" type="button" class="bg-black hover:bg-gray-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para agregar sala -->
+    <div id="modalAgregarSala" class="fixed top-0 left-0 w-full h-full bg-opacity-50 flex items-center justify-center hidden" style="backdrop-filter: blur(6px);">
+        <div class="bg-white p-8 space-y-4 w-1/2 h-auto mx-auto my-20">
+            <h1 class="text-2xl mb-4 text-center">Agregar Sala</h1>
+            <!-- Formulario agregar producto -->
+            <form action="{% url 'crear_sala' %}" id="AgregarSala" method="POST" class="grid grid-cols-1 gap-4">
+                {% csrf_token %}
+                <!-- Campos del formulario -->
+                <div>
+                    <label  class="block text-sm font-medium text-gray-700">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+        
+                    <label  class="block text-sm font-medium text-gray-700">Cantidad Total:</label>
+                    <input type="number" id="capacidad" name="capacidad" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"></input>
+        </div>
+    
+                <!-- Botones de envío y cierre -->
+                <div class="col-span-full flex justify-between items-center mb-4">
+                    <button type="submit" class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">Agregar sala</button>
+                    <!-- Botón para cerrar el modal -->
+                    <button id="btnCerrarAgregarSala" type="button" class="btnCerrarAgregarSala bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    
+<!-- </body> -->
+
+<!-- jquery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Script editar sala -->
+<script>
+    // $(document).ready(function(){
+    
+        $(".edit-button").on("click", function(e){
+            var row = $(this).closest("tr");
+            var id = row.data("id");  // Obtener el ID de la sala
+
+            // Realiza una petición AJAX para obtener los datos del documento
+            $.ajax({
+                url: "/obtener_sala/" + id + "/",
+                type: "GET",
+                success: function (data) {
+                    // Rellenar el formulario con los datos actuales del documento
+                    $("#editNombre").val(data.nombre);
+                    $("#editCapacidad").val(data.capacidad);
+
+                    // Mostrar el modal
+                    $("#editModal").removeClass("hidden");
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+
+            // Cerrar el modal
+            $("#closeEditModal").on("click", function() {
+                $("#editModal").addClass("hidden");
+                $("#editForm")[0].reset();  // Vaciar los campos del formulario
+                $("#saveButton, #closeEditModal").prop("disabled", false);  // Habilitar los botones
+            });
+
+            // Enviar el formulario
+            $("#editForm").on("submit", function(event){
+                event.preventDefault();
+                var formData = new FormData(this);
+                formData.append('sala_id', id);
+
+                // Desactivar los botones
+                $("#saveButton, #closeEditModal").prop("disabled", true);
+
+                $.ajax({
+                    url: "/editar_sala/" + id + "/",  // Generar la URL dinámicamente
+                    type: 'POST',
+                    data: formData,
+                    success: function (data) {
+                        if(data.success){
+                        alert(data.message);
+                        $("#editModal").addClass("hidden");
+                        $("#editForm")[0].reset();
+                        $("#saveButton, #closeEditModal").prop("disabled", false);
+                        window.parent.postMessage('salas', '*');  
+                    }
+                    else if (data.error) {
+                        alert(data.error);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if(jqXHR.responseJSON.error){
+                        alert(jqXHR.responseJSON.error);
+                    }
+                    console.log(errorThrown);
+                    $("#saveButton, #closeEditModal").prop("disabled", false);
+                },
+
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+
+                // Evitar que se envíe el formulario más de una vez
+                event.stopImmediatePropagation();
+                return false;
+            });
+        });
+    // });
+</script>
+
+<!-- Script eliminar sala -->
+<script>
+    // $(document).ready(function(){
+    $(".delete-button").on("click", function(e){
+        var row = $(this).closest("tr");
+        var id = row.data("id");  // Obtener el ID de la sala   
+
+        // Confirmar la eliminación
+        if (!confirm("¿Estás seguro de que quieres eliminar esta sala?")) {
+            e.stopImmediatePropagation();
+            return;
+        }
+
+        $.ajax({
+            url: "/eliminar_sala/" + id + "/",  // Generar la URL dinámicamente
+            type: 'POST',
+            data: {'sala_id': id,'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()},
+            success: function (data) {
+                alert('Sala eliminada con éxito');
+                
+                // Enviar mensaje a la ventana principal.
+                window.parent.postMessage('salas', '*');    
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error al eliminar la sala: ' + errorThrown);
+            }
+        });
+        // Evitar que se envíe el formulario más de una vez
+        e.stopImmediatePropagation();
+        return false;
+    });
+// });
+
+</script>
+
+<!-- Script para abrir el modal de creación de sala -->
+<script>
+    // $(document).ready(function () {
+        $(".btnAgregarSala").click(function () {
+            $("#modalAgregarSala").show();
+        });
+
+        $("#btnCerrarAgregarSala").click(function () {
+            $("#modalAgregarSala").hide();
+            $("#AgregarSala")[0].reset();
+        });
+    // });
+</script>
+
+<!-- Script para enviar el formulario de creación de producto -->
+<script>
+    // $(document).ready(function () {
+        $("#AgregarSala").submit(function (e) {
+            e.preventDefault();
+    
+            var formData = new FormData(this);
+            formData.append('csrfmiddlewaretoken', $('input[name=csrfmiddlewaretoken]').val());
+
+            $.ajax({
+                url: "{% url 'crear_sala' %}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    if(data.success){
+                        alert(data.success);
+                    }
+                    $("#modalAgregarSala").hide();
+                    $("#AgregarSala")[0].reset();
+                    window.parent.postMessage('salas', '*');  
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if(jqXHR.responseJSON.error){
+                        alert(jqXHR.responseJSON.error);
+                    }
+                    console.log(errorThrown);
+                }
+            });
+    
+            // Evitar que se envíe el formulario más de una vez
+            e.stopImmediatePropagation();
+            return false;
+        });
+    // });    
+</script>
+
+ <!-- filtro -->
+<script>
+        $("#busquedas").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("table tbody tr").filter(function() {
+                var nombre = $(this).find("td:nth-child(1)").text().toLowerCase();
+                var cantidad = $(this).find("td:nth-child(2)").text().toLowerCase();
+                $(this).toggle(
+                    nombre.indexOf(value) > -1 ||
+                    cantidad.indexOf(value) > -1
+                )
+            });
+        });
+</script>
+
+<!-- </html> -->
