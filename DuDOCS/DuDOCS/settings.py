@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-dd*=&@x2hm_7mg$o9)$98io#+m(p#)vbame#t-u7a49z03!*w3
 DEBUG = True
 
 # ALLOWED_HOSTS = ['*'] '*' para permitir todos los hosts, solo usar en entorno de desarrollo
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.vercel.app']
 
 # Application definition
 
@@ -97,23 +97,13 @@ WSGI_APPLICATION = 'DuDOCS.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'railway',
-        'USER':'root',
-        'PASSWORD':'FhdGDFE33eEe466gag2ah4EaDe24D52F',
-        'HOST':'viaduct.proxy.rlwy.net',
-        'PORT':'59423',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-        
 }
-#DATABASES = {
-   # 'default': {
-     #   'ENGINE': 'django.db.backends.sqlite3',
-    #    'NAME': BASE_DIR / 'db.sqlite3',
- #   }
-#}
 
 
 # Password validation
