@@ -1,0 +1,388 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de usuarios</title>
+    {% tailwind_css %}
+  </head>
+  <body>
+    {% include 'header.html' %}
+    <div class="body w-full p-4 flex-1 bg-white">
+        <h1 class="text-2xl mb-4 font-bold">Usuarios</h1>
+        <div class="flex justify-between items-center mb-4">
+            <input type="text" id="busqueda" placeholder="Buscar..." class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+            <button class="btnAgregarUsuario bg-blue hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded">Agregar Usuario</button>
+        </div>
+        <div class="h-screen w-full">
+            <table class="table-auto text-left border-collapse w-full" style="background-color: #1C1B1F;">
+                <thead>
+                    <tr>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle">Username</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle">Email</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle">Rol</th>
+                        <th class="py-4 px-6 font-bold uppercase text-sm text-white border-b align-middle">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="{% if forloop.counter|divisibleby:2 %}bg-gray-100{% else %}bg-white{% endif %}" data-id="{{ user.id }}">
+                        <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ user.username }}</td>
+                        <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ user.email }}</td>
+                        <td class="py-4 px-6 border-b border-gray-400 align-middle">{{ user.userprofile.rol }}</td>
+                        <td class="py-4 px-6 border-b border-gray-400 align-middle relative group">
+                            <button class="bg-blue hover:bg-blue-dark text-black font-bold py-2 px-4 rounded">
+                                Opciones
+                            </button>
+                            <!-- Menú desplegable -->
+                            <ul class="absolute hidden space-y-1 bg-white border border-gray-300 py-1 px-2 rounded-md shadow-md text-sm z-10 group-hover:block">
+                                <li>
+                                    <button class="btnEditarUsuario rounded-lg edit-button block px-4 py-2 hover:bg-blue hover:bg-yellow-500">Editar</button>
+                                </li>
+                                <li>
+                                    <button class="delete-button rounded-lg delete-button block px-4 py-2 hover:bg-red hover:bg-yellow-500">Eliminar</button>
+                                </li>
+                            </ul>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Modal para editar usuario -->
+    <div id="modalEditarUsuario" class="fixed top-0 left-0 w-full h-full bg-opacity-50 flex items-center justify-center hidden" style="backdrop-filter: blur(6px);">
+        <div class="bg-white p-8 space-y-4 w-1/2 h-auto mx-auto my-20">
+            <h1 class="text-2xl mb-4 text-center">Editar Usuario</h1>
+            <!-- Formulario de edición de usuario -->
+            <form id="formEditarUsuario" method="POST" class="grid grid-cols-2 gap-4">
+                {% csrf_token %}
+                <!-- Campos del formulario -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Usuario:</label>
+                    <input type="text" id="username" name="username" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+    
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email:</label>
+                    <input type="email" id="email" name="email" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+    
+                    <label for="rol" class="block text-sm font-medium text-gray-700">Rol:</label>
+                    <select id="rol" name="rol" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-yellow-500 focus:ring-yellow-500">
+                        <option value="Administrador">Administrador</option>
+                        <option value="Docente">Docente</option>
+                        <option value="CoordinadorDocente">Coordinador Docente</option>
+                        <option value="Ayudante">Ayudante</option>
+                        <option value="Dara">Dara</option>
+                        <option value="PuntoEstudiantil">Punto Estudiantil</option>
+                    </select>
+    
+                    <label for="first_name" class="block text-sm font-medium text-gray-700">Nombre/s:</label>
+                    <input type="text" id="first_name" name="first_name" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+    
+                    <label for="last_name" class="block text-sm font-medium text-gray-700">Apellido/s:</label>
+                    <input type="text" id="last_name" name="last_name" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                </div>
+    
+                <div>
+                    <label for="is_active" class="block text-sm font-medium text-gray-700">¿Usuario activo?:</label>
+                    <input type="checkbox" id="is_active" name="is_active" class="text-yellow-500 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+    
+                    <!-- <label for="is_staff" class="block text-sm font-medium text-gray-700">¿Es administrador?:</label>
+                    <input type="checkbox" id="is_staff" name=is_staff class="text-yellow-500 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"> -->
+    
+                    <label for=is_superuser class="block text-sm font-medium text-gray-700">¿Es super-administrador?:</label>
+                    <input type=checkbox id=is_superuser name=is_superuser class="text-yellow-500 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                </div>
+    
+                <!-- Botones de envío y cierre -->
+                <div class="col-span-full flex justify-between items-center mb-4">
+                    <button type=submit class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">Guardar cambios</button>
+                    <!-- Botón para cerrar el modal -->
+                    <button id=btnCerrarEditarUsuario type=button class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    
+
+    <!-- Modal para agregar usuario -->
+    <div id="modalAgregarUsuario" class="fixed top-0 left-0 w-full h-full bg-opacity-50 flex items-center justify-center hidden" style="backdrop-filter: blur(6px);">
+        <div class="bg-white p-8 space-y-4 w-1/2 h-auto mx-auto my-20">
+            <h1 class="text-2xl mb-4 text-center">Agregar Usuario</h1>
+            <!-- Formulario de edición de usuario -->
+            <form id="formAgregarUsuario" method="POST" class="grid grid-cols-2 gap-4">
+                {% csrf_token %}
+                <!-- Campos del formulario -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Usuario:</label>
+                    <input type="text" id="username" name="username" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+    
+                    <label for="password1" class="block text-sm font-medium text-gray-700">Contraseña:</label>
+                    <input type="password" id="password1" name="password1" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+    
+                    <label for="password2" class="block text-sm font-medium text-gray-700">Confirmar Contraseña:</label>
+                    <input type="password" id="password2" name="password2" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+    
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email:</label>
+                    <input type="email" id="email" name="email" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                </div>
+    
+                <div>
+                    <label for="rol" class="block text-sm font-medium text-gray-700">Rol:</label>
+                    <select id="rol" name="rol" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                        <option value="" disabled selected>Seleccionar Rol</option>
+                        <option value="Administrador">Administrador</option>
+                        <option value="Docente">Docente</option>
+                        <option value="CoordinadorDocente">Coordinador Docente</option>
+                        <option value="Ayudante">Ayudante</option>
+                        <option value="Dara">Dara</option>
+                        <option value="PuntoEstudiantil">Punto Estudiantil</option>
+                    </select>
+    
+                    <label for="first_name" class="block text-sm font-medium text-gray-700">Nombre/s:</label>
+                    <input type="text" id="first_name" name="first_name" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+    
+                    <label for="last_name" class="block text-sm font-medium text-gray-700">Apellido/s:</label>
+                    <input type="text" id="last_name" name="last_name" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                </div>
+    
+                <div>
+                    <!-- <label for="is_staff" class="block text-sm font-medium text-gray-700">Is Staff:</label>
+                    <input type="checkbox" id="is_staff" name="is_staff" class="text-yellow-500 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"> -->
+    
+                    <label for="is_superuser" class="block text-sm font-medium text-gray-700">¿Es super-administrador?:</label>
+                    <input type="checkbox" id="is_superuser" name="is_superuser" class="text-yellow-500 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                </div>
+    
+                <!-- Botones de envío y cierre -->
+                <div class="col-span-full flex justify-between items-center mb-4">
+                    <button type="submit" class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">
+                        Agregar usuario
+                    </button>
+                    <!-- Botón para cerrar el modal -->
+                    <button id="btnCerrarAgregarUsuario" type="button" class="btnCerrarAgregarUsuario bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">
+                        Cerrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+
+<!-- jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Script para abrir el modal de creación de usuario -->
+<script>
+    $(document).ready(function () {
+        $(".btnAgregarUsuario").click(function () {
+            $("#modalAgregarUsuario").show();
+        });
+
+        $("#btnCerrarAgregarUsuario").click(function () {
+            $("#modalAgregarUsuario").hide();
+            $("#formAgregarUsuario")[0].reset();
+        });
+    });
+</script>
+
+    <!-- Script para abrir el modal de edición de usuario -->
+    <script>
+      $(document).ready(function () {
+          $(".btnEditarUsuario").click(function () {
+              var userRow = $(this).parents("tr");
+              var userId = userRow.data("id");
+
+              // Obtenemos los datos del usuario de la fila de la tabla
+              var username = userRow.find("td:nth-child(1)").text();
+              var email = userRow.find("td:nth-child(2)").text();
+              var rol = userRow.find("td:nth-child(3)").text();
+  
+              // Asignamos los datos al formulario
+              $("#username").val(username);
+              $("#email").val(email);
+              $("#rol").val(rol);
+
+              // Para el resto de los campos, si no están en la tabla, los dejamos en blanco
+              $("#first_name").val("");
+              $("#last_name").val("");
+              $("#is_active").prop("checked", false);
+            //   $("#is_staff").prop("checked", false);
+              $("#is_superuser").prop("checked", false);
+
+              $("#formEditarUsuario").attr("data-user-id", userId);
+
+              $("#modalEditarUsuario").show();
+          });
+
+          $("#btnCerrarEditarUsuario").click(function () {
+              $("#modalEditarUsuario").hide();
+              $("#formEditarUsuario")[0].reset();
+          });
+      });
+    </script>
+
+
+<!-- Script para enviar el formulario de creación de usuario -->
+<script>
+$(document).ready(function () {
+    $("#formAgregarUsuario").submit(function (e) {
+        e.preventDefault();
+
+        var formData = $(this).serializeArray();
+        formData.push({name: 'csrfmiddlewaretoken', value: $('input[name=csrfmiddlewaretoken]').val()});
+
+        $.ajax({
+            url: "{% url 'crear_usuario' %}",
+            type: "POST",
+            data: $.param(formData),
+            success: function (data) {
+                if(data.success){
+                    alert(data.success);
+                }
+                $("#modalAgregarUsuario").hide();
+                $("#formAgregarUsuario")[0].reset();
+                location.reload();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if(jqXHR.responseJSON.error){
+                    alert(jqXHR.responseJSON.error);
+                }
+                console.log(errorThrown);
+            }
+        });
+
+        // Evitar que se envíe el formulario más de una vez
+        e.stopImmediatePropagation();
+        return false;
+    });
+});
+
+</script>
+
+<!-- Script llenar form edicion usuario -->
+<script>
+  $(document).ready(function () {
+      $(".btnEditarUsuario").click(function () {
+          var userRow = $(this).parents("tr");
+          var userId = userRow.data("id");
+
+          // Realiza una petición AJAX para obtener los datos del usuario
+          $.ajax({
+              url: "/obtener_usuario/" + userId + "/",
+              type: "GET",
+              success: function (data) {
+                  // Asignamos los datos al formulario
+                  $("#username").val(data.username);
+                  $("#email").val(data.email);
+                  $("#rol").val(data.rol);
+                  $("#first_name").val(data.first_name);
+                  $("#last_name").val(data.last_name);
+                  $("#is_active").prop("checked", data.is_active);
+                //   $("#is_staff").prop("checked", data.is_staff);
+                  $("#is_superuser").prop("checked", data.is_superuser);
+
+                  $("#formEditarUsuario").attr("data-user-id", userId);
+
+                  $("#modalEditarUsuario").show();
+              },
+              error: function (error) {
+                  console.log(error);
+              }
+          });
+      });
+
+      $("#btnCerrarEditarUsuario").click(function () {
+          $("#modalEditarUsuario").hide();
+          $("#formEditarUsuario")[0].reset();
+      });
+  });
+</script>
+
+<!-- Script enviar form edicion usuario -->
+<script>
+    $(document).ready(function () {
+    $("#formEditarUsuario").submit(function (e) {
+        e.preventDefault();
+        var userId = $(this).attr("data-user-id");
+
+        var formData = $(this).serializeArray();
+        formData.push({name: 'csrfmiddlewaretoken', value: $('input[name=csrfmiddlewaretoken]').val()});
+
+        $.ajax({
+            url: "/editar_usuario/" + userId + "/",
+            type: "POST",
+            data: $.param(formData),
+            success: function (data) {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert(data.success);
+                    $("#modalEditarUsuario").hide();
+                    $("#formEditarUsuario")[0].reset();
+                    location.reload();
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log(errorThrown);
+            }
+        });
+        // Evitar que se envíe el formulario más de una vez
+        e.stopImmediatePropagation();
+        return false;
+    });
+});
+</script>
+
+<!-- eliminar_usuario -->
+<script>
+  $(document).ready(function(){
+  $(".delete-button").on("click", function(){
+      var row = $(this).closest("tr");
+      var id = row.data("id");  // Obtener el ID del documento
+
+      // Confirmar la eliminación
+      if (!confirm("¿Estás seguro de que quieres eliminar este usuario?")) {
+          return;
+      }
+
+      $.ajax({
+          url: "/eliminar_usuario/" + id + "/",  // Generar la URL dinámicamente
+          type: 'POST',
+          data: {'documento_id': id, 'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()},
+          success: function (data) {
+              alert('usuario eliminado con éxito');
+              location.reload();
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+              alert('Error al eliminar usuario: ' + errorThrown);
+          }
+      });
+        // Evitar que se envíe el formulario más de una vez
+        e.stopImmediatePropagation();
+        return false;
+  });
+});
+
+</script>
+
+<!-- filtro -->
+<script>
+    $(document).ready(function(){
+        $("#busqueda").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("table tbody tr").filter(function() {
+                var username = $(this).find("td:nth-child(1)").text().toLowerCase();
+                var email = $(this).find("td:nth-child(2)").text().toLowerCase();
+                var rol = $(this).find("td:nth-child(3)").text().toLowerCase();
+                $(this).toggle(username.indexOf(value) > -1 || email.indexOf(value) > -1 || rol.indexOf(value) > -1)
+            });
+        });
+    });
+</script>
+
+
+ </body>
+</html>

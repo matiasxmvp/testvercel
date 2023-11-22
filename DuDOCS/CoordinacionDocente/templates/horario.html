@@ -1,0 +1,522 @@
+<style>
+    .seleccionado {
+        border: 2px solid#F8B416;
+    }
+</style>
+    <div class="flex">
+        <div class="w-1/10 p-4" style="width: 15%;"">
+            <!-- Filtro por nombre -->
+            <label  class="block mb-2">Buscar Sala:</label> 
+            <input type="text" id="busqueda-sala" name="busqueda-sala" placeholder="Buscar sala" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+    
+            <!-- Filtro por capacidad -->
+            <label  class="block mb-2">Capacidad:</label>
+            <select id="capacidad-select" name="capacidad-select" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                <option value="" selected>Capacidad</option>
+                {% for capacidad in capacidades %}
+                    <option value="{{ capacidad }}">{{ capacidad }}</option>
+                {% endfor %}
+            </select>
+    
+            <!-- Listado de salas (abierto por defecto) -->
+            <label >Sala:</label>
+            <select id="sala-select" name="sala-select" size="10" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                <option value="" selected disabled>Sala</option>
+                {% for sala in salas %}
+                    <option value="{{ sala.nombre }}" data-capacidad="{{ sala.capacidad }}">{{ sala.nombre }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Filtro por semana/fecha -->
+            <div>
+                <label  id="fecha-select-label"  class="block mb-2 mt-2" style="display: none;">Fecha:</label>
+                <input type="date" id="fecha-select" name="fecha-select" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm" style="display: none;">
+            </div>
+
+            <!-- Reserva de modulos -->
+            <div>
+                <button id="iniciar-reserva" class="mt-2 iniciar-reserva bg-blue hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded"" onclick="iniciarReserva()" style="display: none;">Reservar Módulos</button>
+            </div>
+        </div>
+        <div class="w-9-10 p-4" style="width: 85%;"">
+            <div id="horario-container">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para crear reserva -->
+<div id="crearReservaModal" class="fixed top-0 left-0 w-full h-full bg-opacity-50 flex items-center justify-center hidden" style="backdrop-filter: blur(6px);">
+    <div class="bg-white p-8 space-y-4 w-1/2 h-auto mx-auto my-20">
+        <h1 class="text-2xl mb-4 text-center">Reservar Módulo</h1>
+        <form action="{% url 'crear_reserva' %}" id="reservarForm" method="POST" class="grid grid-cols-1 gap-4">
+            <!-- <form id="reservarForm" method="POST" class="grid grid-cols-1 gap-4"> -->
+            {% csrf_token %}
+            <div class="flex">
+                <div class="w-1/2 pr-4">
+                    <label  class="block text-sm font-medium text-gray-700">Fecha:</label>
+                    <input type="date" id="fecha" name="fecha" required
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                        readonly>
+                    <label>Hora de Inicio:</label>
+                    <input type="time" id="hora-inicio" name="hora-inicio" required readonly
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                    <label>Hora de Fin:</label>
+                    <input type="time" id="hora-fin" name="hora-fin" required readonly
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                    <label>Sala:</label>
+                    <input type="text" id="sala" name="sala" required readonly
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                </div>
+                <div class="w-1/2 pr-4 ml-4">
+                    <label>Asignatura:</label>
+                    <input type="text" id="asignatura" name="asignatura" minlength="3" maxlength="200" required
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                    <label>Sigla y Sección:</label>
+                    <input type="text" id="sigla-seccion" name="sigla-seccion" required minlength="3" maxlength="200"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm">
+                    <label class="block text-gray-700">Tipo Hora:</label>
+                    <select id="tipo-hora" name="tipo-hora" class="w-full py-2 px-3 border rounded focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500" required>
+                        <option value="" selected disabled>Seleccione tipo de hora</option>
+                        <option value="Normal">Normal</option>
+                        <option value="Reserva">Reserva</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Botones de envío y cierre -->
+            <div class="col-span-full flex justify-between items-center mb-4">
+                <button id="closeCrearReservaModal" onclick="cerrarModal()" type="button" class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded">Cerrar</button>
+                <!-- <input type="submit" id="saveButton" class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded" value="Reservar"> -->
+                <button type="submit" id="saveButton" class="bg-black hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded" value="Reservar">Reservar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+    <!-- Script obtención y carga de horario seleccionado -->
+    <script>
+        var selectSala = document.getElementById('sala-select');
+        var horarioContainer = document.getElementById('horario-container');
+        var selectFecha = document.getElementById('fecha-select');
+        var labelFecha = document.getElementById('fecha-select-label');
+        var botonReserva = document.getElementById('iniciar-reserva');
+        selectSala.addEventListener('change', (event) => {
+            event.preventDefault();
+            var salaNombre = selectSala.options[selectSala.selectedIndex].value;
+            if (salaNombre) {
+                selectFecha.style.display = 'block'; // Muestra el selector de fecha
+                labelFecha.style.display = 'block';
+                botonReserva.style.display = 'block';
+                var fecha = selectFecha.value;
+                obtenerHorario(salaNombre, fecha);
+            } else {
+                selectFecha.style.display = 'none'; // Oculta el selector de fecha
+                labelFecha.style.display = 'none';
+                botonReserva.style.display = 'none';
+            }
+        });
+        selectFecha.addEventListener('change', (event) => {
+            event.preventDefault();
+            var salaNombre = selectSala.options[selectSala.selectedIndex].value;
+            if (salaNombre){
+                var fecha = selectFecha.value;
+                obtenerHorario(salaNombre, fecha);
+            }
+        });
+        function obtenerHorario(salaNombre, fecha) {
+            fetch(`/obtener_horario/${salaNombre}/${fecha}/`)
+                .then(response => response.json())
+                .then(data => {
+                    construirTablaHorario(data);
+                });
+        }
+
+        function construirTablaHorario(data) {
+            // Accede a los datos de horarios desde la respuesta JSON
+            var horarios = data.horarios;
+
+            // Accede al contenedor de la tabla
+            var tableContainer = document.createElement('table');
+            tableContainer.classList.add('border', 'border-collapse', 'w-full');
+
+            // Agrega encabezados
+            var headerRow = document.createElement('tr');
+            var headers = ['Horario', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            headers.forEach(headerText => {
+                var header = document.createElement('th');
+                header.classList.add('border', 'px-4', 'py-2', 'w-24', 'h-12');
+                header.textContent = headerText;
+                headerRow.appendChild(header);
+            });
+            tableContainer.appendChild(headerRow);
+            
+            // Construye la tabla de horarios
+            horarios.forEach((horario, fila) => {
+                var row = document.createElement('tr');
+                // Agrega hora de inicio y fin
+                var horarioCell = document.createElement('td');
+                horarioCell.classList.add('border', 'px-4', 'py-2', 'w-24', 'h-12', 'horario');
+                horarioCell.textContent = `${horario.times[0].slice(0, 5)}\n a ${horario.times[1].slice(0, 5)}`;
+                row.appendChild(horarioCell);
+
+                // Agrega datos de asignaturas para cada día de la semana
+                for (let dia = 0; dia < 6; dia++) {  // Supongo que tienes datos para 6 días de la semana
+                    var asignaturas = horario.courses[dia] || []; // Si no hay asignaturas, muestra una celda vacía
+                    var cell = document.createElement('td');
+                    cell.classList.add('border', 'px-4', 'py-2', 'w-24', 'h-12', 'align-middle', 'text-center');
+                    var diafila = headers[dia+1]
+                    // cell.classList.add(`${diafila}-${fila}`)
+                    cell.id = `${diafila}-${fila}`;
+                    if (asignaturas.length > 0) {
+                        var contenidoCelda = asignaturas.map(asignatura => {
+                            if (asignatura.tipo_hora && asignatura.tipo_hora === 'Reserva') {
+                                return `${asignatura.asignatura} - R`;
+                            } else {
+                                return asignatura.asignatura;
+                            }
+                        }).join(', ');
+
+                        cell.innerHTML = contenidoCelda;
+                        // cell.textContent = asignaturas.join(', ');
+                        cell.classList.add('ocupado');
+                        // Asignar data-id solo si hay asignaturas presentes
+                        asignaturas.forEach(asignatura => {
+                            var idHorario = asignatura.id;
+                            cell.setAttribute('data-id', idHorario);
+                        });
+                        cell.addEventListener('click', clickBloque);
+                    } else {
+                        cell.classList.add('reservable');
+                        cell.addEventListener('click', clickBloque);
+                    }
+                    if (asignaturas.length > 0) {
+                        // Agrega el menú desplegable
+                        var menuCell = document.createElement('div');
+                        menuCell.classList.add('py-4', 'px-6', 'border-gray-400', 'align-middle', 'relative', 'group');
+
+                        var button = document.createElement('button');
+                        button.classList.add('bg-blue-dark', 'text-black', 'rounded', 'text-sm', 'no-underline', 'focus:outline-none');
+                        button.textContent = 'Opciones';
+                        button.style.borderBottom = 'none'; // Elimina la línea debajo del botón
+                        menuCell.appendChild(button);
+
+                        var ul = document.createElement('ul');
+                        ul.classList.add('absolute', 'hidden', 'space-y-1', 'bg-white', 'border', 'border-gray-300', 'py-1', 'px-2', 'rounded-md', 'shadow-md', 'text-sm', 'z-10', 'group-hover:block');
+
+                        // var li1 = document.createElement('li');
+                        // var editButton = document.createElement('button');
+                        // editButton.classList.add('rounded-lg', 'edit-button', 'block', 'px-4', 'py-2', 'hover:bg-yellow-500');
+                        // editButton.textContent = 'Editar';
+                        // li1.appendChild(editButton);
+
+                        var li2 = document.createElement('li');
+                        var deleteButton = document.createElement('button');
+                        deleteButton.classList.add('rounded-lg', 'delete-button', 'block', 'px-4', 'py-2', 'hover:bg-red', 'hover:bg-yellow-500');
+                        deleteButton.textContent = 'Eliminar';
+                        li2.appendChild(deleteButton);
+
+                        // ul.appendChild(li1);
+                        ul.appendChild(li2);
+                        menuCell.appendChild(ul);
+                        cell.appendChild(menuCell);
+                    }
+                    row.appendChild(cell);
+                }
+
+                // Agrega la fila a la tabla
+                tableContainer.appendChild(row);
+            });
+
+            // Limpia el contenedor anterior y agrega la tabla construida
+            horarioContainer.innerHTML = '';
+            horarioContainer.appendChild(tableContainer);
+            bloquesSeleccionados.forEach(bloque => {
+                            bloque.classList.remove('seleccionado');
+                        });
+                        bloquesSeleccionados.length = 0;
+        }
+    </script>
+
+    <!-- Script crear reserva -->
+<script>
+    var bloquesSeleccionados = [];
+
+    function clickBloque(e) {
+        var celda = e.target;
+        if (celda.classList.contains('ocupado')) {
+            // Si la celda clicada está ocupada, vaciar la lista de bloques seleccionados
+            bloquesSeleccionados.forEach(bloque => {
+                bloque.classList.remove('seleccionado');
+            });
+            bloquesSeleccionados.length = 0;
+        } else {
+            if (bloquesSeleccionados.length === 0) {
+                // Agregar el bloque seleccionado si la lista de celdas está vacía
+                bloquesSeleccionados.push(celda);
+                celda.classList.add('seleccionado');
+            } else {
+                if (bloquesSeleccionados.includes(celda)) {
+                    // Si la celda clicada ya está en la lista, se elimina
+                    var idx = bloquesSeleccionados.indexOf(celda);
+                    if (idx > -1) bloquesSeleccionados.splice(idx, 1);
+                    celda.classList.remove('seleccionado');
+                } else if (sonMismoDia(celda, bloquesSeleccionados) && sonConsecutivas(celda, bloquesSeleccionados)) {
+                    // Agregar la celda si es del mismo día y no hay celdas ocupadas en medio
+                    bloquesSeleccionados.push(celda);
+                    celda.classList.add('seleccionado');
+                } else {
+                    bloquesSeleccionados.forEach(bloque => {
+                        bloque.classList.remove('seleccionado');
+                    });
+                    bloquesSeleccionados.length = 0;
+                    bloquesSeleccionados.push(celda);
+                    celda.classList.add('seleccionado');
+                }
+            }
+        }
+    }
+
+    function sonMismoDia(celda, listadoCeldas) {
+        var idCelda = celda.id;
+        var idPrimeraCelda = listadoCeldas[0].id;
+        var diaCelda = idCelda.split('-')[0];
+        var diaPrimeraCelda = idPrimeraCelda.split('-')[0];
+        return diaCelda === diaPrimeraCelda;
+    }
+
+    function sonConsecutivas(celda, bloquesSeleccionados) {
+        // Obtener el número de fila de la celda clicada
+        var filaCelda = parseInt(celda.id.split('-')[1]);
+
+        // Obtener los números de fila de las celdas seleccionadas y ordenarlos
+        var filasSeleccionadas = bloquesSeleccionados.map(bloque => parseInt(bloque.id.split('-')[1]));
+        filasSeleccionadas.sort((a, b) => a - b);
+
+        // Verificar si las filas son consecutivas
+        for (let i = 0; i < filasSeleccionadas.length - 1; i++) {
+            if (filasSeleccionadas[i + 1] - filasSeleccionadas[i] !== 1) {
+                return false; // No son consecutivas
+            }
+        }
+
+        // Verificar si la fila de la celda clicada es consecutiva a las celdas seleccionadas
+        if (
+            filasSeleccionadas.length > 0 &&
+            (filasSeleccionadas[0] - 1 === filaCelda || filasSeleccionadas[filasSeleccionadas.length - 1] + 1 === filaCelda)
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // Función para modal de crear reserva
+    function iniciarReserva() {
+        // Comprueba si se ha seleccionado al menos un bloque
+        var horariosSeleccionados = bloquesSeleccionados;
+        if (horariosSeleccionados.length > 0) {
+            horariosSeleccionados.sort((a, b) => {
+                var filaA = parseInt(a.id.split('-')[1]);
+                var filaB = parseInt(b.id.split('-')[1]);
+                return filaA - filaB;
+            });
+
+            var BLOQUES_HORARIOS = [
+                '08:01:00', '08:40:00', '08:41:00', '09:20:00', '09:31:00', '10:10:00', '10:11:00', '10:50:00',
+                '11:01:00', '11:40:00', '11:41:00', '12:20:00', '12:31:00', '13:10:00', '13:11:00', '13:50:00',
+                '14:01:00', '14:40:00', '14:41:00', '15:20:00', '15:31:00', '16:10:00', '16:11:00', '16:50:00',
+                '17:01:00', '17:40:00', '17:41:00', '18:20:00', '18:21:00', '19:00:00', '19:11:00', '19:50:00',
+                '19:51:00', '20:30:00', '20:41:00', '21:20:00', '21:21:00', '22:00:00', '22:11:00', '22:50:00'
+            ];
+
+            let primeraCelda = horariosSeleccionados[0];
+            let ultimaCelda = horariosSeleccionados[horariosSeleccionados.length - 1];
+
+            // Obtiene el índice de la hora de inicio y fin
+            var indiceInicio = parseInt(primeraCelda.id.split('-')[1]);
+            var indiceFin = parseInt(ultimaCelda.id.split('-')[1]);
+
+            // Obtiene las horas de inicio y fin
+            let horaInicio = BLOQUES_HORARIOS[indiceInicio * 2];
+            let horaFin = BLOQUES_HORARIOS[indiceFin * 2 + 1];
+
+            // Extrae el valor de la sala
+            var sala = document.getElementById('sala-select').value;
+
+            let dia = horariosSeleccionados[0].id.split('-')[0]; // Lunes Martes Miércoles Jueves Viernes Sábado
+
+            let fechaValue = new Date(document.getElementById('fecha-select').value);
+
+            // Obtén el primer día de la semana (lunes) para la fecha seleccionada
+            let primerDiaSemana = new Date(fechaValue.setDate(fechaValue.getDate() - fechaValue.getDay() + 1));
+
+            // Mapea los nombres de los días a números
+            let dias = { 'Lunes': 0, 'Martes': 1, 'Miércoles': 2, 'Jueves': 3, 'Viernes': 4, 'Sábado': 5 };
+
+            // Calcula la fecha para el día específico
+            let fechaDia = new Date(primerDiaSemana.setDate(primerDiaSemana.getDate() + dias[dia]));
+
+            let diaFecha = '' + fechaDia.getDate();
+            let mesFecha = '' + (fechaDia.getMonth() + 1); // Los meses en JavaScript comienzan desde 0
+            let añoFecha = fechaDia.getFullYear();
+
+            if (mesFecha.length < 2)
+                mesFecha = '0' + mesFecha;
+            if (diaFecha.length < 2)
+                diaFecha = '0' + diaFecha;
+
+            let fechaFormateada = [añoFecha, mesFecha, diaFecha].join('-');
+
+            document.getElementById('fecha').value = fechaFormateada;
+            document.getElementById('hora-inicio').value = horaInicio;
+            document.getElementById('hora-fin').value = horaFin;
+            document.getElementById('sala').value = sala;
+
+            // Abre el modal
+            var modal = document.getElementById('crearReservaModal');
+            modal.style.display = 'block';
+        } else {
+            alert('Debes seleccionar al menos un bloque horario.');
+            return;
+        }
+    }
+
+    // Función para cerrar el modal de crear reserva
+    function cerrarModal() {
+        // Ocultar el formulario modal
+        var modal = document.getElementById('crearReservaModal');
+        modal.style.display = 'none';
+        // Vaciar los campos del formulario
+        document.getElementById('reservarForm').reset();
+    }
+
+    // Función para manejar el click en el botón de guardar en el modal
+    document.getElementById('saveButton').addEventListener('click', function (e) {
+        e.preventDefault();
+        crearReserva();
+    });
+
+    // Función para crear la reserva y enviar los datos al servidor
+    function crearReserva(e) {
+        var saveButton = document.getElementById('saveButton');
+        if (saveButton.getAttribute('data-processing') === 'true') {
+            return; // Evitar envío duplicado
+        }
+
+        saveButton.setAttribute('data-processing', 'true');
+        var formData = new FormData(document.getElementById('reservarForm'));
+        formData.append('csrfmiddlewaretoken', $('input[name=csrfmiddlewaretoken]').val());
+
+        $.ajax({
+            url: "{% url 'crear_reserva' %}",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                if (data.success) {
+                    alert(data.success);
+                    var salaReservada = document.getElementById('sala').value;
+                    var fechaReservada = document.getElementById('fecha').value;
+                    obtenerHorario(salaReservada, fechaReservada)
+                } else if (data.error) {
+                    alert(data.error);
+                }
+                cerrarModal();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                    alert(jqXHR.responseJSON.error);
+                } else {
+                    alert('Ocurrió un error al procesar la solicitud.');
+                }
+            },
+            complete: function () {
+                saveButton.setAttribute('data-processing', 'false');
+            }
+        });
+        e.stopImmediatePropagation();
+        return false;
+    }
+
+
+</script>
+    
+
+    <!-- Script filtros -->
+    <script>
+        // document.addEventListener('DOMContentLoaded', function () {
+            var inputBusqueda = document.getElementById('busqueda-sala');
+            var selectCapacidad = document.getElementById('capacidad-select');
+            var options = selectSala.querySelectorAll('option');
+        
+            inputBusqueda.addEventListener('input', actualizarFiltro);
+            selectCapacidad.addEventListener('change', actualizarFiltro);
+        
+            // Función para aplicar el filtro
+            function actualizarFiltro() {
+                var textoBusqueda = inputBusqueda.value.toLowerCase();
+                var capacidadSeleccionada = selectCapacidad.value;
+        
+                // Itera sobre las opciones y muestra/oculta según coincidan la búsqueda y la capacidad
+                options.forEach((option) => {
+                    var salaNombre = option.value.toLowerCase();
+                    var salaCapacidad = option.getAttribute('data-capacidad');
+                    
+                    var coincideNombre = salaNombre.includes(textoBusqueda);
+                    var coincideCapacidad = capacidadSeleccionada === '' || salaCapacidad === capacidadSeleccionada;
+                    
+                    if (coincideNombre && coincideCapacidad) {
+                        option.style.display = 'block';  // Muestra la opción
+                    } else {
+                        option.style.display = 'none';   // Oculta la opción
+                    }
+                });
+            }
+        // });
+    </script>
+
+    <!-- Script fecha actual     -->
+    <script>
+        // window.onload = function() {
+            var fechaHoy = new Date();
+            var dia = ("0" + fechaHoy.getDate()).slice(-2);
+            var mes = ("0" + (fechaHoy.getMonth() + 1)).slice(-2);
+            var fechaHoyFormato = fechaHoy.getFullYear()+"-"+(mes)+"-"+(dia) ;
+            document.getElementById('fecha-select').value = fechaHoyFormato;
+        // };
+    </script>
+
+
+<!-- Script eliminar horario  -->
+<script>
+    document.addEventListener('click', function(e) {
+    if (e.target && e.target.classList.contains('delete-button')) {
+        var cell = e.target.closest('td');
+        var id = cell.getAttribute('data-id');  // Obtener el ID del horario
+
+        // Confirmar la eliminación
+        if (!confirm("¿Estás seguro de que quieres eliminar este horario?")) {
+            e.stopImmediatePropagation();
+            return;
+        }
+        $.ajax({
+            url: "/eliminar_horario/" + id + "/",  // Generar la URL dinámicamente
+            type: 'POST',
+            data: {'horario_id': id,'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()},
+            success: function (data) {
+                alert('Horario eliminado con éxito');
+                var salahorarioel = document.getElementById('sala-select').value;
+                var fechahorarioel = document.getElementById('fecha-select').value;
+                obtenerHorario(salahorarioel, fechahorarioel)
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error al eliminar el horario: ' + errorThrown);
+            }
+        });
+    }
+    // Evitar que se envíe el formulario más de una vez
+    e.stopImmediatePropagation();
+        return false;
+});
+</script>

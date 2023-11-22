@@ -1,0 +1,49 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recuperar contraseña</title>
+    {% tailwind_css %}
+  </head>
+  <body style="background-color: #1C1B1F;">
+    <div class="w-full h-screen font-sans bg-cover ">
+      <div
+        class="container flex items-center justify-center flex-1 h-full mx-auto"
+      >
+        <div class="w-full max-w-lg">
+          <div class="leading-loose">
+            <div class="max-w-sm p-10 m-auto rounded shadow-xl"
+              style="background: #1C1B1F url('/theme/static/images/duoclogin.png') 70%  / cover no-repeat; width: 263px; height: 85px;">
+              
+            </div>
+            <form class="max-w-sm p-10 m-auto rounded shadow-xl bg-white/25" action="{% url 'login' %}"> 
+              <p class="mb-8 text-2xl font-light text-center text-white">
+                Recuperación de contraseña
+              </p>
+              <div class="mb-2">
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="login-with-bg-email"
+                    class="rounded-lg border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    placeholder="email"
+                  />
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4">
+                <button
+                  type="submit"
+                  class="py-2 px-4 bg-yellow-500 focus:bg-white focus:ring-offset-indigo-200 text-black w-full transition ease-in duration-200 text-center text-base font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-lg"
+                  >
+                  Enviar email
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,64 @@
+    <div class="body w-full p-4 flex-1 bg-white">
+        <h1 class="text-2xl font-bold mb-4">Subir Horario</h1>
+        <form id="submit-form" method="POST" enctype="multipart/form-data" action="{% url 'subirDocumento' %}">
+            {% csrf_token %}
+            <div id="documentos">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="col-span-2">
+                        <label class="block text-gray-700">Seleccione un archivo:</label>
+                        <input type="file" accept=".txt, .xls, .xlsx" name="archivo" class="w-full py-2 px-3 border rounded focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500" required>
+                    </div>          
+                    <div class="col-span-2">
+                        <label class="block text-gray-700">Semestre:</label>
+                        <select id="semestre" name="semestre" class="w-full py-2 px-3 border rounded focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500" required>
+                            <option value="" selected disabled>Seleccione Semestre</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+                    </div>         
+                </div>            
+            </div>        
+            <!-- Botón de envío -->
+            <input type="submit" value="Subir Horario" class="text-white bg-black px-4 py-2 rounded hover:bg-yellow-500 ml-2" style="background-color: #1C1B1F;">
+        </form>    
+    </div>
+    <!-- Contenedor del Loader -->
+    <div id="loader" style="display: none;" class="w-full h-full fixed top-0 left-0 bg-white opacity-75 z-50">
+        <!-- Loader -->
+        <span class="text-green-500 opacity-75 top-1/2 my-0 mx-auto block relative w-0 h-0" style="top: 50%;">
+            <i class="fas fa-circle-notch fa-spin fa-5x"></i>
+        </span>
+    </div>    
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        // $(document).ready(function () {
+            $('#submit-form').on('submit', function (event) {
+                event.preventDefault()
+                var formData = new FormData(this);
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'subirHorario' %}",
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    beforeSend: function(){
+                        $("#loader").fadeIn(); // Mostrar el loader
+                    },
+                    success: function (data){
+                        $("#loader").fadeOut(); // Ocultar el loader
+                        alert("Horario almacenado exitosamente");
+                        window.parent.postMessage('subirhorario', '*');
+                    },
+                    error: function (error) {
+                        $("#loader").fadeOut(); // Ocultar el loader
+                        console.log(error);
+                        alert('Ha ocurrido un error al intentar subir el horario.');
+                    }
+                });
+                event.stopImmediatePropagation();
+                return false;
+            });
+        // });
+    </script>
