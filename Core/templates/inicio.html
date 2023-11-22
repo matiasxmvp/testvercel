@@ -1,0 +1,55 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inicio</title>
+    {% tailwind_css %}
+    <link rel="stylesheet" href="{% static 'css/inicio.css' %}" />
+  </head>
+  <body style="background-color: #1C1B1F;">
+    <div>
+      {% include 'header.html' %} {% if request.user.is_authenticated %}
+      <p class="text-white text-center left-3">Bienvenido/a, {{ request.user.first_name }}</p>
+    {% endif %}
+    </div>
+    
+    <div class="flex ">
+      <!-- Primera Tarjeta -->
+      <div class="max-w-lg w-full mx-5 bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer">
+        <a href="{% url 'dara' %}">
+          <img src="/theme/static/images/dara.png" alt="Imagen 1" class="w-full h-96 object-cover" />
+          <div class="p-4">
+            <h2 class="text-xl font-semibold text-center text-gray-800">DARA</h2>
+            
+          </div>
+        </a>
+      </div>
+    
+      <!-- Segunda Tarjeta -->
+      <div class="max-w-lg w-full mx-5 bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer">
+        <a href="{% url 'coordinacionDocente' %}">
+          <img src="/theme/static/images/coordinaciondocente.png" alt="Imagen 2" class="w-full h-96 object-cover" />
+          <div class="p-4">
+            <h2 class="text-xl font-semibold text-center text-gray-800">Coordinación Docente</h2>
+            
+          </div>
+        </a>
+      </div>
+    
+      <!-- Tercera Tarjeta -->
+      <div class="max-w-lg w-full mx-5 bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer">
+        <a href="{% url 'puntoEstudiantil' %}">
+          <img src="/theme/static/images/puntoestudiantil.png" alt="Imagen 3" class="w-full h-96 object-cover" />
+          <div class="p-4">
+            <h2 class="text-xl font-semibold text-center text-gray-800">Punto Estudiantil</h2>
+            
+          </div>
+        </a>
+      </div>
+    </div>
+    
+    
+  </body>
+</html>
